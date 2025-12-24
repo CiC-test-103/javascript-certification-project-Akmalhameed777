@@ -1,5 +1,6 @@
 // Necessary Imports (you will need to use this)
 const { Student } = require('./Student')
+const fs = require('fs').promises;
 
 /**
  * Node Class (GIVEN, you will need to use this)
@@ -36,7 +37,9 @@ class LinkedList {
    * RETURNS:   None
    */
   constructor() {
-    // TODO
+    this.head = null;
+    this.tail = null;
+    this.length = 0;
   }
 
   /**
@@ -48,7 +51,19 @@ class LinkedList {
    * - Think about adding to the 'end' of the LinkedList (Hint: tail)
    */
   addStudent(newStudent) {
-    // TODO
+    const newNode = new Node(newStudent);
+    
+    // If list is empty
+    if (this.head === null) {
+      this.head = newNode;
+      this.tail = newNode;
+    } else {
+      // Add to end
+      this.tail.next = newNode;
+      this.tail = newNode;
+    }
+    
+    this.length++;
   }
 
   /**
@@ -60,7 +75,39 @@ class LinkedList {
    * - Think about how removal might update head or tail
    */
   removeStudent(email) {
-    // TODO
+    // Empty list
+    if (this.head === null) {
+      return;
+    }
+    
+    // If head is the student to remove
+    if (this.head.data.getEmail() === email) {
+      this.head = this.head.next;
+      
+      // If list is now empty, update tail
+      if (this.head === null) {
+        this.tail = null;
+      }
+      
+      this.length--;
+      return;
+    }
+    
+    // Search for student
+    let current = this.head;
+    while (current.next !== null) {
+      if (current.next.data.getEmail() === email) {
+        // If removing tail, update tail pointer
+        if (current.next === this.tail) {
+          this.tail = current;
+        }
+        
+        current.next = current.next.next;
+        this.length--;
+        return;
+      }
+      current = current.next;
+    }
   }
 
   /**
@@ -69,8 +116,16 @@ class LinkedList {
    * RETURNS:   The Student or -1 if not found
    */
   findStudent(email) {
-    // TODO
-    return -1
+    let current = this.head;
+    
+    while (current !== null) {
+      if (current.data.getEmail() === email) {
+        return current.data;
+      }
+      current = current.next;
+    }
+    
+    return -1;
   }
 
   /**
@@ -79,7 +134,9 @@ class LinkedList {
    * RETURNS:   None
    */
   #clearStudents() {
-    // TODO
+    this.head = null;
+    this.tail = null;
+    this.length = 0;
   }
 
   /**
@@ -91,8 +148,21 @@ class LinkedList {
    *  - Output should appear as: "JohnDoe, JaneDoe"
    */
   displayStudents() {
-    // TODO
-    return "";
+    if (this.head === null) {
+      return "";
+    }
+    
+    const names = [];
+    let current = this.head;
+    
+    while (current !== null) {
+      // Use getName() getter and remove spaces
+      const nameWithoutSpaces = current.data.getName().replace(/\s+/g, '');
+      names.push(nameWithoutSpaces);
+      current = current.next;
+    }
+    
+    return names.join(', ');
   }
 
   /**
@@ -101,8 +171,19 @@ class LinkedList {
    * RETURNS:   A sorted array of students by name
    */
   #sortStudentsByName() {
-    // TODO
-    return [];
+    const students = [];
+    let current = this.head;
+    
+    // Collect all students
+    while (current !== null) {
+      students.push(current.data);
+      current = current.next;
+    }
+    
+    // Sort by name using getName() getter
+    students.sort((a, b) => a.getName().localeCompare(b.getName()));
+    
+    return students;
   }
 
   /**
@@ -113,8 +194,11 @@ class LinkedList {
    * - Use sortStudentsByName()
    */
   filterBySpecialization(specialization) {
-    // TODO
-    return [];
+    const sortedStudents = this.#sortStudentsByName();
+    
+    return sortedStudents.filter(student => 
+      student.getSpecialization() === specialization
+    );
   }
 
   /**
@@ -125,8 +209,11 @@ class LinkedList {
    * - Use sortStudentsByName()
    */
   filterByMinAge(minAge) {
-    // TODO
-    return [];
+    const sortedStudents = this.#sortStudentsByName();
+    
+    return sortedStudents.filter(student => 
+      student.getYear() >= minAge
+    );
   }
 
   /**
@@ -135,7 +222,22 @@ class LinkedList {
    * RETURNS:   None
    */
   async saveToJson(fileName) {
-    // TODO
+    const students = [];
+    let current = this.head;
+    
+    // Collect all students using getter methods
+    while (current !== null) {
+      students.push({
+        name: current.data.getName(),
+        year: current.data.getYear(),
+        email: current.data.getEmail(),
+        specialization: current.data.getSpecialization()
+      });
+      current = current.next;
+    }
+    
+    // Write to file
+    await fs.writeFile(fileName, JSON.stringify(students, null, 2));
   }
 
   /**
@@ -146,7 +248,23 @@ class LinkedList {
    *  - Use clearStudents() to perform overwriting
    */
   async loadFromJSON(fileName) {
-    // TODO
+    // Clear existing students
+    this.#clearStudents();
+    
+    // Read file
+    const fileData = await fs.readFile(fileName, 'utf8');
+    const studentsArray = JSON.parse(fileData);
+    
+    // Add each student
+    for (const studentData of studentsArray) {
+      const student = new Student(
+        studentData.name,
+        studentData.year,
+        studentData.email,
+        studentData.specialization
+      );
+      this.addStudent(student);
+    }
   }
 
 }

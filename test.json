@@ -1,0 +1,14 @@
+[
+  {
+    "name": "JohnDoe",
+    "year": 2,
+    "email": "john@email.com",
+    "specialization": "computerScience"
+  },
+  {
+    "name": "JaneSmith",
+    "year": 3,
+    "email": "jane@email.com",
+    "specialization": "electricalEngineering"
+  }
+]
